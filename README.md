@@ -13,7 +13,13 @@ quizzes, and a 60-item blueprint-weighted mock exam with per-domain diagnostics.
   reloads, tab closes and restarts, on that device.
 - **Export / import** on the Dashboard (*Progress & sync*) moves progress between devices — e.g. iPhone →
   laptop. Export downloads a `cca-progress-<timestamp>.json` file (or copies the JSON to the clipboard);
-  Import accepts a pasted blob or an uploaded file, validates it, and replaces local progress.
+  Import accepts a pasted blob or an uploaded file and validates it before applying anything:
+  - **Merge into this device** (default, also used for file uploads) — keeps the higher score for every
+    quiz, the union of modules read, and the stronger mock sitting. Never loses work done on either device.
+  - **Replace everything** — discards this device's progress first, behind a confirmation prompt.
+
+  Invalid imports (not JSON, another app's file, an unsupported version, no recognisable progress) are
+  rejected with an explanatory message and leave existing progress untouched.
 
 No backend, no accounts, no tracking — nothing leaves the device unless you export it yourself.
 

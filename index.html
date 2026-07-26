@@ -388,7 +388,17 @@ function validateProgress(o){
   if(!Object.keys(visited).length && !Object.keys(data.best).length && !Object.keys(data.chBest).length && !md) return {ok:false, err:'no recognizable progress found in that JSON.'};
   return {ok:true, data:data};
 }
-function applyProgress(d){ state.mode=d.mode; state.visited=d.visited; state.best=d.best; state.chBest=d.chBest; state.mockDomains=d.mockDomains; }
+/* merge=true keeps the better of the two sides so importing never destroys newer work on this device */
+function applyProgress(d, merge){
+  if(!merge){ state.mode=d.mode; state.visited=d.visited; state.best=d.best; state.chBest=d.chBest; state.mockDomains=d.mockDomains; return; }
+  for(const k of Object.keys(d.visited)) state.visited[k]=true;
+  for(const k of Object.keys(d.best)) state.best[k]=Math.max(state.best[k]||0, d.best[k]);
+  for(const k of Object.keys(d.chBest)) state.chBest[k]=Math.max(state.chBest[k]||0, d.chBest[k]);
+  if(d.mockDomains){
+    const rate=o=> o? ['D1','D2','D3','D4','D5'].reduce((a,x)=>a+(o[x]?o[x].c/o[x].t:0),0) : -1;
+    if(rate(d.mockDomains)>rate(state.mockDomains)) state.mockDomains=d.mockDomains;  // keep the stronger mock sitting
+  }
+}
 function load(){
   let raw=null;
   try{ raw=localStorage.getItem(LSKEY); }catch(e){ console.warn('Progress load failed:', e); return; }
@@ -434,22 +444,23 @@ function importError(msg, txt){
   const b=document.getElementById('importBox'); if(b) b.style.display='block';
   const ta=document.getElementById('importText'); if(ta) ta.value=txt;
 }
-function doImport(txt){
+function doImport(txt, merge){
   let o=null;
   try{ o=JSON.parse(txt); }catch(e){ importError('that is not valid JSON.', txt); return; }
   const r=validateProgress(o);
   if(!r.ok){ importError(r.err, txt); return; }
-  applyProgress(r.data);
+  if(!merge && !window.confirm('Replace all progress on this device with the imported file? Anything you have done here and not exported will be lost.')) return;
+  applyProgress(r.data, merge);
   save();
   const nb=Object.keys(r.data.best).length, nv=Object.keys(r.data.visited).length;
-  setMsg('Progress imported — '+nb+' quiz score(s), '+nv+' module(s) visited'+(r.data.mockDomains?', mock diagnostics restored':'')+'.');
+  setMsg((merge?'Progress merged':'Progress replaced')+' — '+nb+' quiz score(s), '+nv+' module(s) visited'+(r.data.mockDomains?', mock diagnostics included':'')+'. Overall progress now '+overall()+'%.');
   state.view='dash'; state.quiz=null; renderNav(); render();
 }
-function importFromText(){ const ta=document.getElementById('importText'); doImport(ta? ta.value : ''); }
-function importFromFile(ev){
+function importFromText(merge){ const ta=document.getElementById('importText'); doImport(ta? ta.value : '', merge); }
+function importFromFile(ev, merge){
   const f=ev.target.files && ev.target.files[0]; if(!f) return;
   const rd=new FileReader();
-  rd.onload=function(){ doImport(String(rd.result)); };
+  rd.onload=function(){ doImport(String(rd.result), merge); };
   rd.onerror=function(){ setMsg('Could not read that file.', false); render(); };
   rd.readAsText(f);
 }
@@ -479,9 +490,10 @@ function syncHTML(){
   h+='<textarea id="syncOut" readonly spellcheck="false" style="display:none"></textarea>';
   h+='<div id="importBox" style="display:none">';
   h+='<textarea id="importText" spellcheck="false" placeholder="Paste your exported progress JSON here..."></textarea>';
-  h+='<div class="syncrow"><button class="btn" onclick="importFromText()">Restore from pasted JSON</button>';
-  h+='<label class="btn ghost">Choose file...<input type="file" accept="application/json,.json" style="display:none" onchange="importFromFile(event)"></label></div>';
-  h+='<div class="note">Importing replaces the progress stored on this device.</div>';
+  h+='<div class="syncrow"><button class="btn" onclick="importFromText(true)">Merge into this device</button>';
+  h+='<button class="btn ghost" onclick="importFromText(false)">Replace everything</button>';
+  h+='<label class="btn ghost">Merge a file...<input type="file" accept="application/json,.json" style="display:none" onchange="importFromFile(event,true)"></label></div>';
+  h+='<div class="note"><b>Merge</b> keeps the higher score for every quiz and the union of modules read — the safe choice, and it never loses work done on this device. <b>Replace</b> discards this device\'s progress first.</div>';
   h+='</div></div></section>';
   return h;
 }
