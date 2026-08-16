@@ -108,7 +108,7 @@ const QBANK = {"a1": [{"q": "As of mid-2026, which model is the balanced default
 const MODULES = [
 {id:'models', title:'1. Models & Selection', sub:'Lineup · thinking vs effort', dom:'Exam: D4, D5',
 fast:'Five current models (Jul 2026): Fable 5 (max capability) > Opus 5 (NEW Jul 24 — recommended general starting point, thinking ON by default) > Opus 4.8 (still available) > Sonnet 5 (balanced default on Claude/Claude Code, $2/$10 standard) > Haiku 4.5 (speed/cost). New-generation models use ADAPTIVE thinking (model-managed) tuned by the EFFORT parameter (default: high). Only Haiku 4.5 still uses classic extended thinking with a manual token budget.',
-deep:`<p><b>The lineup (verified Jul 25, 2026).</b></p>
+deep:`<p><b>The lineup (verified Aug 16, 2026).</b></p>
 <table><tr><th>Model</th><th>Role</th><th>Thinking</th><th>Price in/out per MTok</th><th>Context</th></tr>
 <tr><td>Fable 5</td><td>Max capability flagship</td><td>Adaptive, always on</td><td>$10 / $50</td><td>1M</td></tr>
 <tr><td><b>Opus 5</b> (Jul 24)</td><td>Recommended general starting point</td><td>Adaptive, ON by default; disable only at effort ≤ high</td><td>$5 / $25</td><td>1M</td></tr>
@@ -546,7 +546,7 @@ function isPart(m){ return !isDone(m) && (state.visited[m.id]||state.best[m.id]!
 function overall(){ let done=MODULES.filter(isDone).length; return Math.round(100*done/MODULES.length); }
 function renderNav(){
   const n=document.getElementById('nav');
-  let h='<h1>CCA Study App</h1><div class="tag">Claude Certified Architect — Foundations · verified 25 Jul 2026</div>';
+  let h='<h1>CCA Study App</h1><div class="tag">Claude Certified Architect — Foundations · verified 16 Aug 2026</div>';
   h+='<div id="modeRow"><button class="'+(state.mode==='fast'?'on':'')+'" onclick="setMode(\'fast\')">⚡ Fast track</button><button class="'+(state.mode==='deep'?'on':'')+'" onclick="setMode(\'deep\')">🔍 Deep dive</button></div>';
   h+='<button class="navitem '+(state.view==='dash'?'active':'')+'" onclick="go(\'dash\')"><span class="dot" style="background:var(--acc)"></span>Dashboard</button>';
   for(const m of MODULES){
@@ -561,7 +561,7 @@ function setMode(md){ state.mode=md; save(); renderNav(); render(); }
 function go(v){ state.view=v; if(v!=='dash'){state.visited[v]=true; save();} state.quiz=null; renderNav(); render(); window.scrollTo(0,0); }
 function render(){ const el=document.getElementById('main'); if(state.view==='dash'){ el.innerHTML=dashHTML(); } else { const m=MODULES.find(x=>x.id===state.view); el.innerHTML=moduleHTML(m); } }
 function dashHTML(){
-  let h='<h2>Study Dashboard</h2><div class="sub">Built from the verified EY × Anthropic CCA training pack · docs re-verified 25 Jul 2026 (incl. Opus 5, released 24 Jul)</div><div class="domtag">Pass bar: 720/1000 · Mock readiness: ≥80% overall, no domain &lt;70%</div>';
+  let h='<h2>Study Dashboard</h2><div class="sub">Built from the verified EY × Anthropic CCA training pack · docs re-verified 16 Aug 2026 (incl. Opus 5, released 24 Jul)</div><div class="domtag">Pass bar: 720/1000 · Mock readiness: ≥80% overall, no domain &lt;70%</div>';
   h+='<section><div class="fastbox"><div class="lbl">How to use</div><b>Fast track</b>: read each module’s 30-second summary, flip the flashcards, take the short quiz (5 Q). <b>Deep dive</b>: adds the full explainer, comparison cards, 10-question quizzes and Week-1 challenge quizzes. Finish with the 60-item mock. A module turns green at ≥70% on its quiz.</div></section>';
   h+='<section><h3 class="sec">Modules — practical first</h3><div class="tiles">';
   for(const m of MODULES){ const st= m.quiz? (state.best[m.id]!==undefined? 'Best: '+state.best[m.id]+'%':'Not attempted') : (state.visited[m.id]?'Read':'Unread'); h+='<div class="tile" onclick="go(\''+m.id+'\')"><h4>'+(isDone(m)?'✅ ':'')+m.title+'</h4><div class="st">'+m.sub+'</div><div class="st">'+st+'</div></div>'; }
